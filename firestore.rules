@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Solo este email puede escribir. Reemplázalo por tu NEXT_PUBLIC_ADMIN_EMAIL.
+    // (El gate de /admin también verifica esto en el cliente; esto es el candado real.)
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'jdinamarca@snakode.com';
+    }
+
+    // Posts del blog/lab: lectura y escritura SOLO admin.
+    // El blog público (/blog, /blog/[slug]) lee vía Admin SDK desde el servidor,
+    // que ignora las reglas, así que no necesitamos lectura pública aquí.
+    // Esto mantiene los borradores privados.
+    match /posts/{postId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Bloquea todo lo demás por defecto.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

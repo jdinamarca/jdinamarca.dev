@@ -1,0 +1,50 @@
+[
+  {
+    "id": "snakode-platform",
+    "title": "Snakode Platform",
+    "description": "Plataforma SaaS para desarrollo de aplicaciones con IA, integrando múltiples modelos y herramientas de desarrollo en una interfaz unificada.",
+    "tags": ["Next.js", "TypeScript", "Firebase", "AI", "SaaS"],
+    "repoUrl": "https://github.com/snakode/platform",
+    "liveUrl": "https://snakode.dev",
+    "featured": true,
+    "year": 2025
+  },
+  {
+    "id": "ai-image-generator",
+    "title": "AI Image Generator",
+    "description": "Aplicación web para generar imágenes usando modelos de IA, con galería personalizada y opciones de edición básicas.",
+    "tags": ["React", "Node.js", "OpenAI", "Image Processing", "Web App"],
+    "repoUrl": "https://github.com/jasondinamarca/ai-image-gen",
+    "liveUrl": "https://ai-gen.jdinamarca.dev",
+    "featured": true,
+    "year": 2024
+  },
+  {
+    "id": "ecommerce-dashboard",
+    "title": "E-commerce Dashboard",
+    "description": "Dashboard administrativo para tiendas online con análisis en tiempo real, gestión de inventario y reportes personalizados.",
+    "tags": ["Vue.js", "TypeScript", "PostgreSQL", "Analytics", "Dashboard"],
+    "repoUrl": "https://github.com/jasondinamarca/ecommerce-dashboard",
+    "featured": false,
+    "year": 2024
+  },
+  {
+    "id": "task-management-api",
+    "title": "Task Management API",
+    "description": "API RESTful completa para gestión de tareas con autenticación, websockets para actualizaciones en tiempo real y documentación automática.",
+    "tags": ["Node.js", "Express", "MongoDB", "WebSockets", "REST API"],
+    "repoUrl": "https://github.com/jasondinamarca/task-api",
+    "featured": false,
+    "year": 2023
+  },
+  {
+    "id": "portfolio-v2",
+    "title": "Portfolio V2",
+    "description": "Segunda versión del sitio personal con diseño minimalista, optimización de rendimiento y soporte para dark mode.",
+    "tags": ["Next.js", "Tailwind CSS", "Performance", "Personal Branding"],
+    "repoUrl": "https://github.com/jasondinamarca/portfolio-v2",
+    "liveUrl": "https://jdinamarca.dev",
+    "featured": false,
+    "year": 2023
+  }
+]
