@@ -9,8 +9,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
-import { getFirebaseAuth, getFirebaseStorage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { toast } from "sonner";
 import type { Post } from "@/types";
 
@@ -67,10 +66,20 @@ export function PostEditor({
     },
   });
 
-  const uploadImage = async (file: File): Promise<string> => {
-    const storageRef = ref(getFirebaseStorage(), `posts/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    return getDownloadURL(storageRef);
+  const uploadImage = async (file: File, folder: string = "posts"): Promise<string> => {
+    const token = await getFirebaseAuth().currentUser?.getIdToken();
+    if (!token) throw new Error("No hay sesión activa");
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folder);
+    const res = await fetch("/api/admin/upload", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { url } = (await res.json()) as { url: string };
+    return url;
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,9 +97,7 @@ export function PostEditor({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const storageRef = ref(getFirebaseStorage(), `covers/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const url = await uploadImage(file, "covers");
       setCoverImage(url);
       toast.success("Cover image cargada");
     } catch {
