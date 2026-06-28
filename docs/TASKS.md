@@ -151,8 +151,8 @@
 - [x] Newsletter / comentarios — **T1 · `glm-4.6`** ✅ (ver config pendiente abajo)
 
 ### Configuración pendiente (deploy)
-- [ ] **Giscus:** activar GitHub Discussions en el repo + instalar app giscus → pegar
-  `GISCUS_REPO_ID` y `GISCUS_CATEGORY_ID` reales en `src/components/comments/GiscusComments.tsx`
+- [x] **Giscus:** activar GitHub Discussions en el repo + instalar app giscus → pegar
+  `GISCUS_REPO_ID` y `GISCUS_CATEGORY_ID` reales en `src/components/comments/GiscusComments.tsx` ✅
 - [ ] **Newsletter (Buttondown):** crear cuenta en buttondown.email → añadir API key a
   `.env.local` (`BUTTONDOWN_API_KEY`) → conectar `/api/newsletter/subscribe` con la API de Buttondown
 
