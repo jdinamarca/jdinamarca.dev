@@ -5,6 +5,9 @@ import { onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, User 
 import { getFirebaseAuth } from "@/lib/firebase";
 
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+  redirect_uri: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN + '/auth/callback'
+});
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
 export function useAuth() {
