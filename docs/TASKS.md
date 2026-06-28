@@ -140,22 +140,28 @@
 > **T3** `glm-4-flash` (1 archivo, config, docs, Tailwind).
 
 ### SEO y funcionalidad
-- [ ] Filtros por tags en `/blog` (`TagFilter` client component) — **T2 · `glm-4.5-air`**
-- [ ] Búsqueda simple en el blog (client-side sobre posts cargados) — **T2 · `glm-4.5-air`**
+- [x] Filtros por tags en `/blog` (`BlogFilters.tsx`) — **T2 · `glm-4.5-air`** ✅
+- [x] Búsqueda simple en el blog (client-side sobre posts cargados) — **T2 · `glm-4.5-air`** ✅
 - [x] RSS feed (`/feed.xml/route.ts`) — **T3 · `glm-4-flash`** ✅
 - [x] Vercel Analytics (`@vercel/analytics`) — **T3 · `glm-4-flash`** ✅
 
 ### UX y robustez
-- [ ] Loading skeletons (`loading.tsx`) + error boundary (`error.tsx`) en `/blog` — **T2 · `glm-4.5-air`**
-- [ ] Limpieza de imágenes huérfanas en Storage al eliminar/reemplazar post — **T1 · `glm-4.6`**
-- [ ] Newsletter / comentarios (opcional) — **T1 · `glm-4.6`**
+- [x] Loading skeletons (`loading.tsx`) + error boundary (`error.tsx`) en `/blog` — **T2 · `glm-4.5-air`** ✅
+- [x] Limpieza de imágenes huérfanas en Storage al eliminar/reemplazar post — **T1 · `glm-4.6`** ✅
+- [x] Newsletter / comentarios — **T1 · `glm-4.6`** ✅ (ver config pendiente abajo)
+
+### Configuración pendiente (deploy)
+- [ ] **Giscus:** activar GitHub Discussions en el repo + instalar app giscus → pegar
+  `GISCUS_REPO_ID` y `GISCUS_CATEGORY_ID` reales en `src/components/comments/GiscusComments.tsx`
+- [ ] **Newsletter (Buttondown):** crear cuenta en buttondown.email → añadir API key a
+  `.env.local` (`BUTTONDOWN_API_KEY`) → conectar `/api/newsletter/subscribe` con la API de Buttondown
 
 ### Orden recomendado de ejecución
 1. ~~**[F2]** Analytics~~ ~~**[F4]** RSS~~ ✅ Completados
-2. **[F1]** Filtros → **[F3]** Búsqueda (necesitan Input component primero)
-3. **[F6]** Skeletons (necesita Skeleton component primero)
-4. **[F5]** Limpieza Storage (necesita más detalle)
-5. **[F7]** Newsletter (necesita diseño previo)
+2. ~~**[F1]** Filtros~~ ~~**[F3]** Búsqueda~~ ✅ Completados
+3. ~~**[F6]** Skeletons~~ ✅ Completado
+4. ~~**[F5]** Limpieza Storage~~ ✅ Completado
+5. ~~**[F7]** Newsletter~~ ✅ Completado (config pendiente en deploy)
 
 ### Detalle de cada tarea
 
@@ -206,13 +212,17 @@
 - **Archivos a tocar:** `PostList.tsx` (handleDelete), `PostEditor.tsx` (handleCoverUpload — borrar anterior), posiblemente `src/types/index.ts` y `/api/admin/posts`
 - **Aceptación:** eliminar un post borra cover + imágenes inline de Storage · lint ✓ build ✓
 
-#### [F7] Newsletter / comentarios — T1 · `glm-4.6` — ❌ Insuficiente, necesita diseño previo
-- **Modelo:** `glm-4.6`
-- **Bloqueadores:**
-  - No hay decisión de servicio. Opciones: Mailchimp/Buttondown (newsletter), Giscus/utterances (comentarios)
-  - No hay patrón de formularios en el codebase
-  - No hay componentes de form adicionales (Input, Textarea, Form)
-- **Recomendación:** posponer hasta decidir servicio y diseñar la UI. Documentar como ADR cuando se elija.
+#### [F7] Newsletter / comentarios — T1 · `glm-4.6` — ✅ Completado
+- **Decisión:** Buttondown (newsletter) + Giscus (comentarios vía GitHub Discussions)
+- **Creados:**
+  - `src/components/newsletter/NewsletterForm.tsx` — form client con Input + Button + toast
+  - `src/components/newsletter/Newsletter.tsx` — wrapper con ambas secciones
+  - `src/components/comments/GiscusComments.tsx` — `@giscus/react`, theme-adaptive (light/dark_dimmed)
+  - `src/app/api/newsletter/subscribe/route.ts` — endpoint edge, valida email
+- **Integración:** `Newsletter` se renderiza al final de `/blog/[slug]`
+- **Config pendiente (deploy):**
+  1. **Giscus:** activar Discussions en `github.com/jdinamarca/jdinamarca.dev`, instalar app giscus, pegar `GISCUS_REPO_ID` + `GISCUS_CATEGORY_ID` reales
+  2. **Buttondown:** crear cuenta, obtener API key, conectar `/api/newsletter/subscribe` con la API real
 
 ---
 

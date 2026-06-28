@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Timestamp } from "firebase-admin/firestore";
-import { adminDb, adminAuth } from "@/lib/firebase-admin";
+import { adminDb, adminAuth, adminStorage } from "@/lib/firebase-admin";
 import type { Post } from "@/types";
 
 export const runtime = "nodejs";
@@ -80,9 +80,55 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  
   try {
+    // 1. Obtener el post antes de eliminarlo para extraer las imágenes
+    const snap = await adminDb.collection("posts").doc(id).get();
+    const data = snap.data();
+    if (!data) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+
+    // 2. Extraer URLs de imágenes del cover y del contenido
+    const bucket = adminStorage.bucket();
+    const imageUrls: string[] = [];
+
+    // Extraer coverImage
+    if (data.coverImage) {
+      imageUrls.push(data.coverImage);
+    }
+
+    // Extraer imágenes del contenido HTML
+    if (data.content) {
+      const imageMatches = data.content.match(/<img[^>]+src="([^"]+)"/g);
+      if (imageMatches) {
+        imageMatches.forEach((match: string) => {
+          const url = match.match(/src="([^"]+)"/)?.[1];
+          if (url) imageUrls.push(url);
+        });
+      }
+    }
+
+    // 3. Eliminar todas las imágenes de Storage
+    const deletedImages: string[] = [];
+    for (const imageUrl of imageUrls) {
+      try {
+        const decodedPath = decodeURIComponent(imageUrl.split("/o/")[1].split("?")[0]);
+        await bucket.file(decodedPath).delete();
+        deletedImages.push(decodedPath);
+      } catch (error) {
+        console.warn(`No se pudo eliminar imagen ${imageUrl}:`, error);
+        // No fallar si una imagen no se puede borrar
+      }
+    }
+
+    // 4. Eliminar el post
     await adminDb.collection("posts").doc(id).delete();
-    return NextResponse.json({ success: true });
+    
+    return NextResponse.json({ 
+      success: true, 
+      deletedImages: deletedImages 
+    });
   } catch (error) {
     console.error("Error eliminando post:", error);
     return NextResponse.json({ error: "delete failed" }, { status: 500 });
@@ -101,6 +147,14 @@ export async function PATCH(
   const body = await request.json();
 
   try {
+    // 1. Obtener el post actual antes de actualizar
+    const snap = await adminDb.collection("posts").doc(id).get();
+    const currentData = snap.data();
+    if (!currentData) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+
+    // 2. Preparar payload de actualización
     const updatePayload: Record<string, unknown> = {
       title: body.title,
       excerpt: body.excerpt,
@@ -126,8 +180,71 @@ export async function PATCH(
     if (body.repo !== undefined) updatePayload.repo = body.repo;
     if (body.demo !== undefined) updatePayload.demo = body.demo;
 
+    // 3. Extraer URLs de imágenes del post actual y del nuevo contenido
+    const bucket = adminStorage.bucket();
+    const currentImageUrls: string[] = [];
+    const newImageUrls: string[] = [];
+
+    // Extraer coverImage actual
+    if (currentData.coverImage) {
+      currentImageUrls.push(currentData.coverImage);
+    }
+
+    // Extraer coverImage nuevo
+    if (body.coverImage) {
+      newImageUrls.push(body.coverImage);
+    }
+
+    // Extraer imágenes del contenido actual
+    if (currentData.content) {
+      const currentImageMatches = currentData.content.match(/<img[^>]+src="([^"]+)"/g);
+      if (currentImageMatches) {
+        currentImageMatches.forEach((match: string) => {
+          const url = match.match(/src="([^"]+)"/)?.[1];
+          if (url) currentImageUrls.push(url);
+        });
+      }
+    }
+
+    // Extraer imágenes del nuevo contenido
+    if (body.content) {
+      const newImageMatches = body.content.match(/<img[^>]+src="([^"]+)"/g);
+      if (newImageMatches) {
+        newImageMatches.forEach((match: string) => {
+          const url = match.match(/src="([^"]+)"/)?.[1];
+          if (url) newImageUrls.push(url);
+        });
+      }
+    }
+
+    // 4. Identificar imágenes que ya no se usan y eliminarlas
+    const imagesToDelete: string[] = [];
+    for (const url of currentImageUrls) {
+      if (!newImageUrls.includes(url)) {
+        imagesToDelete.push(url);
+      }
+    }
+
+    // 5. Eliminar las imágenes que ya no se usan
+    const deletedImages: string[] = [];
+    for (const imageUrl of imagesToDelete) {
+      try {
+        const decodedPath = decodeURIComponent(imageUrl.split("/o/")[1].split("?")[0]);
+        await bucket.file(decodedPath).delete();
+        deletedImages.push(decodedPath);
+      } catch (error) {
+        console.warn(`No se pudo eliminar imagen ${imageUrl}:`, error);
+        // No fallar si una imagen no se puede borrar
+      }
+    }
+
+    // 6. Actualizar el post
     await adminDb.collection("posts").doc(id).update(updatePayload);
-    return NextResponse.json({ success: true });
+    
+    return NextResponse.json({ 
+      success: true, 
+      deletedImages: deletedImages 
+    });
   } catch (error) {
     console.error("Error actualizando post:", error);
     return NextResponse.json({ error: "update failed" }, { status: 500 });

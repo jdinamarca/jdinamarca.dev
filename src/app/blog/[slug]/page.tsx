@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { getPost, getPublishedSlugs } from "@/lib/posts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Newsletter } from "@/components/newsletter/Newsletter";
 
 export const dynamic = "force-dynamic";
 
@@ -152,14 +153,16 @@ export default async function PostPage({ params }: { params: Params }) {
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      <div className="mt-16 border-t border-border pt-8">
-        <Link href="/blog">
-          <Button variant="outline" size="sm">
-            <ArrowLeft />
-            Más artículos
-          </Button>
-        </Link>
-      </div>
+<div className="mt-16 border-t border-border pt-8">
+         <Link href="/blog">
+           <Button variant="outline" size="sm">
+             <ArrowLeft />
+             Más artículos
+           </Button>
+         </Link>
+       </div>
+
+       <Newsletter />
     </article>
   );
 }

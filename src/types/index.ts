@@ -24,7 +24,7 @@ export interface Post {
 
 export type PostSummary = Pick<
   Post,
-  "id" | "title" | "slug" | "category" | "published" | "createdAt"
+  "id" | "title" | "slug" | "category" | "published" | "createdAt" | "coverImage"
 >;
 
 export interface Project {

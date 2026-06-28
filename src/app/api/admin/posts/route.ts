@@ -40,17 +40,18 @@ export async function GET(request: Request) {
     .select("title", "slug", "category", "published", "createdAt")
     .get();
 
-  const posts: PostSummary[] = snapshot.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      title: data.title ?? "",
-      slug: data.slug ?? "",
-      category: data.category ?? "experimento",
-      published: Boolean(data.published),
-      createdAt: toISO(data.createdAt),
-    };
-  });
+const posts: PostSummary[] = snapshot.docs.map((d) => {
+  const data = d.data();
+  return {
+    id: d.id,
+    title: data.title ?? "",
+    slug: data.slug ?? "",
+    category: data.category ?? "experimento",
+    published: Boolean(data.published),
+    createdAt: toISO(data.createdAt),
+    coverImage: data.coverImage ?? null,
+  };
+});
 
   return NextResponse.json({ posts });
 }
