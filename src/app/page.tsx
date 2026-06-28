@@ -19,6 +19,8 @@ import {
 import { stack, focus } from "@/data/stack";
 import projectsData from "@/data/projects.json";
 
+export const dynamic = "force-dynamic";
+
 const projects = projectsData as Project[];
 const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
 
