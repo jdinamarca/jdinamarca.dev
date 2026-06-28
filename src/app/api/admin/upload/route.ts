@@ -72,6 +72,12 @@ export async function POST(request: Request) {
       },
     });
 
+    try {
+      await fileRef.makePublic();
+    } catch (e) {
+      console.error("Aviso: no se pudo hacer pública la imagen:", e instanceof Error ? e.message : e);
+    }
+
     const url = `https://storage.googleapis.com/${bucketName}/${filename.split("/").map(encodeURIComponent).join("/")}`;
 
     return NextResponse.json({ url });
