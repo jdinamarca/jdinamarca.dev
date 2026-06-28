@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, User } from "firebase/auth";
+import { onAuthStateChanged, signInWithRedirect, signInWithPopup, signOut, GoogleAuthProvider, User } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 
 const provider = new GoogleAuthProvider();
