@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { doc, getDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { Trash2, ExternalLink, Loader2, Pencil } from "lucide-react";
-import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -22,14 +21,6 @@ const categoryLabel: Record<NonNullable<Post["category"]>, string> = {
   arquitectura: "Arquitectura",
   experimento: "Experimento",
 };
-
-function toISO(value: unknown): string {
-  if (value && typeof (value as Timestamp).toDate === "function") {
-    return (value as Timestamp).toDate().toISOString();
-  }
-  if (typeof value === "string") return new Date(value).toISOString();
-  return new Date(0).toISOString();
-}
 
 export function PostList({
   refreshKey,
@@ -74,33 +65,14 @@ export function PostList({
   const handleEdit = async (summary: PostSummary) => {
     setEditingId(summary.id);
     try {
-      const snap = await getDoc(doc(getFirebaseDb(), "posts", summary.id));
-      const data = snap.data();
-      if (!data) {
-        toast.error("El post ya no existe");
-        return;
-      }
-      onEdit({
-        id: snap.id,
-        title: data.title ?? "",
-        slug: data.slug ?? "",
-        excerpt: data.excerpt ?? "",
-        content: data.content ?? "",
-        coverImage: data.coverImage ?? undefined,
-        tags: Array.isArray(data.tags) ? data.tags : [],
-        category: data.category ?? "experimento",
-        published: Boolean(data.published),
-        createdAt: toISO(data.createdAt),
-        updatedAt: toISO(data.updatedAt),
-        level: data.level,
-        readTime: data.readTime,
-        tech: Array.isArray(data.tech) ? data.tech : undefined,
-        series: data.series,
-        seriesPart: data.seriesPart,
-        seriesTotal: data.seriesTotal,
-        repo: data.repo,
-        demo: data.demo,
+      const token = await getFirebaseAuth().currentUser?.getIdToken();
+      if (!token) throw new Error("No hay sesión activa");
+      const res = await fetch(`/api/admin/posts/${summary.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { post } = (await res.json()) as { post: Post };
+      onEdit(post);
     } catch (err) {
       console.error("Error cargando el post:", err);
       toast.error("No se pudo abrir el post para editar");
@@ -113,13 +85,18 @@ export function PostList({
     if (!window.confirm(`¿Eliminar "${post.title}"? Esta acción no se puede deshacer.`)) return;
     setDeletingId(post.id);
     try {
-      await deleteDoc(doc(getFirebaseDb(), "posts", post.id));
+      const token = await getFirebaseAuth().currentUser?.getIdToken();
+      if (!token) throw new Error("No hay sesión activa");
+      const res = await fetch(`/api/admin/posts/${post.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       toast.success("Post eliminado");
       onRefresh();
     } catch (err) {
       console.error("Error eliminando post:", err);
-      const code = (err as { code?: string }).code;
-      toast.error(code ? code : "Error al eliminar el post");
+      toast.error("Error al eliminar el post");
     } finally {
       setDeletingId(null);
     }

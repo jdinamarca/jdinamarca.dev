@@ -9,15 +9,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
-import { getFirebaseDb, getFirebaseStorage } from "@/lib/firebase";
-import {
-  collection,
-  addDoc,
-  doc,
-  updateDoc,
-  deleteField,
-  serverTimestamp,
-} from "firebase/firestore";
+import { getFirebaseAuth, getFirebaseStorage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { toast } from "sonner";
 import type { Post } from "@/types";
@@ -110,42 +102,39 @@ export function PostEditor({
     if (!title.trim() || !editor) return;
     setSaving(true);
     try {
-      const common: {
-        title: string;
-        excerpt: string;
-        content: string;
-        tags: string[];
-        category: Category;
-        published: boolean;
-        updatedAt: ReturnType<typeof serverTimestamp>;
-        coverImage?: string;
-      } = {
+      const token = await getFirebaseAuth().currentUser?.getIdToken();
+      if (!token) throw new Error("No hay sesión activa");
+
+      const payload = {
         title,
         excerpt,
         content: editor.getHTML(),
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
         category,
         published,
-        updatedAt: serverTimestamp(),
+        ...(coverImage ? { coverImage } : {}),
       };
 
-      if (coverImage) {
-        common.coverImage = coverImage;
-      }
-
       if (post) {
-        const updatePayload = {
-          ...common,
-          coverImage:
-            !coverImage && post.coverImage ? deleteField() : common.coverImage,
-        };
-        await updateDoc(doc(getFirebaseDb(), "posts", post.id), updatePayload);
-      } else {
-        await addDoc(collection(getFirebaseDb(), "posts"), {
-          ...common,
-          slug: slugify(title),
-          createdAt: serverTimestamp(),
+        const res = await fetch(`/api/admin/posts/${post.id}`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      } else {
+        const res = await fetch("/api/admin/posts", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ...payload, slug: slugify(title) }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
       }
 
       toast.success(
@@ -167,12 +156,7 @@ export function PostEditor({
       }
     } catch (err) {
       console.error("Error guardando post:", err);
-      const code = (err as { code?: string }).code;
-      const hint =
-        code === "permission-denied"
-          ? " (revisa las reglas de Firestore)"
-          : "";
-      toast.error(code ? `${code}${hint}` : "Error al guardar el post");
+      toast.error("Error al guardar el post");
     } finally {
       setSaving(false);
     }

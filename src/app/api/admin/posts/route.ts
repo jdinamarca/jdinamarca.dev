@@ -54,3 +54,41 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ posts });
 }
+
+export async function POST(request: Request) {
+  const header = request.headers.get("authorization");
+  const token = header?.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const decoded = await adminAuth.verifyIdToken(token);
+    if (decoded.email !== ADMIN_EMAIL) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+  } catch {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json();
+
+  try {
+    const docRef = await adminDb.collection("posts").add({
+      title: body.title,
+      slug: body.slug,
+      excerpt: body.excerpt,
+      content: body.content,
+      tags: body.tags,
+      category: body.category,
+      published: body.published,
+      coverImage: body.coverImage ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return NextResponse.json({ success: true, id: docRef.id });
+  } catch (error) {
+    console.error("Error creando post:", error);
+    return NextResponse.json({ error: "create failed" }, { status: 500 });
+  }
+}
