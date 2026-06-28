@@ -6,25 +6,41 @@ import { PostCard } from "@/components/blog/PostCard";
 import { CurrentlyPlaying } from "@/components/home/CurrentlyPlaying";
 import { ExperienceTimeline } from "@/components/home/ExperienceTimeline";
 import { getRecentPosts, getPublishedPostCount } from "@/lib/posts";
-import type { Post } from "@/types";
-import { ArrowRight, BookOpen, FlaskConical, Terminal, User, Briefcase } from "lucide-react";
-import type { Project } from "@/types";
+import type { Post, Project } from "@/types";
+import {
+  ArrowRight,
+  BookOpen,
+  FlaskConical,
+  Terminal,
+  User,
+  Briefcase,
+  type LucideIcon,
+} from "lucide-react";
+import { stack, focus } from "@/data/stack";
 import projectsData from "@/data/projects.json";
-
-const stack = [
-  "Next.js",
-  "TypeScript",
-  "Python",
-  "Firebase",
-  "LangChain",
-  "TailwindCSS",
-  "Kubernetes",
-];
-
-const focus = ["Arquitectura de software", "AI Engineering", "Plataformas", "DevEx"];
 
 const projects = projectsData as Project[];
 const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
+
+function SectionHeading({
+  icon: Icon,
+  children,
+  action,
+}: {
+  icon: LucideIcon;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-4 flex items-center justify-between gap-4">
+      <h2 className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
+        <Icon className="size-3.5" />
+        {children}
+      </h2>
+      {action}
+    </div>
+  );
+}
 
 export default async function Home() {
   let recentPosts: Post[] = [];
@@ -44,7 +60,7 @@ export default async function Home() {
         <div className="absolute inset-x-0 top-0 h-[480px] bg-radial-brand" />
       </div>
 
-      <section className="container mx-auto max-w-4xl px-4 pt-28 pb-20 md:pt-36">
+      <section className="container mx-auto max-w-4xl px-4 pt-28 pb-16 md:pt-36">
         <div className="flex flex-col items-start gap-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm">
             <span className="relative flex size-2">
@@ -94,80 +110,75 @@ export default async function Home() {
             </Link>
           </div>
         </div>
+      </section>
 
-        <div className="mt-20 space-y-4">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            <Terminal className="size-3.5" />
-            Stack & herramientas
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {stack.map((tech) => (
-              <Badge key={tech} variant="outline" className="py-1">
-                {tech}
-              </Badge>
-            ))}
-          </div>
+      <section className="container mx-auto max-w-4xl px-4 py-10">
+        <SectionHeading icon={Terminal}>Stack &amp; herramientas</SectionHeading>
+        <div className="flex flex-wrap gap-2">
+          {stack.map((tech) => (
+            <Badge key={tech} variant="outline" className="py-1">
+              {tech}
+            </Badge>
+          ))}
         </div>
+      </section>
 
-        <div className="mt-20 space-y-4">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            <Terminal className="size-3.5" />
-            Currently Playing With
-          </div>
-          <CurrentlyPlaying />
-        </div>
+      <section className="container mx-auto max-w-4xl px-4 py-10">
+        <SectionHeading icon={Terminal}>Currently Playing With</SectionHeading>
+        <CurrentlyPlaying />
+      </section>
 
-        {featuredProjects.length > 0 && (
-          <div className="mt-20 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                <Terminal className="size-3.5" />
-                Proyectos destacados
-              </div>
+      {featuredProjects.length > 0 && (
+        <section className="container mx-auto max-w-4xl px-4 py-10">
+          <SectionHeading
+            icon={Terminal}
+            action={
               <Link
                 href="/projects"
-                className="text-sm text-foreground/70 hover:text-brand transition-colors flex items-center gap-1"
+                className="flex items-center gap-1 text-sm text-foreground/70 transition-colors hover:text-brand"
               >
                 Ver todos
                 <ArrowRight className="size-3" />
               </Link>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
+            }
+          >
+            Proyectos destacados
+          </SectionHeading>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredProjects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
           </div>
-        )}
+        </section>
+      )}
 
-        {recentPosts.length > 0 && (
-          <div className="mt-20 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                <Terminal className="size-3.5" />
-                Últimos posts
-              </div>
+      {recentPosts.length > 0 && (
+        <section className="container mx-auto max-w-4xl px-4 py-10">
+          <SectionHeading
+            icon={Terminal}
+            action={
               <Link
                 href="/blog"
-                className="text-sm text-foreground/70 hover:text-brand transition-colors flex items-center gap-1"
+                className="flex items-center gap-1 text-sm text-foreground/70 transition-colors hover:text-brand"
               >
                 Ver todo el blog
                 <ArrowRight className="size-3" />
               </Link>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {recentPosts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
+            }
+          >
+            Últimos posts
+          </SectionHeading>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {recentPosts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
           </div>
-        )}
+        </section>
+      )}
 
-        <div className="mt-20 space-y-4">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            <User className="size-3.5" />
-            Sobre mí
-          </div>
+      <section className="border-y border-border bg-card/30">
+        <div className="container mx-auto max-w-4xl px-4 py-16">
+          <SectionHeading icon={User}>Sobre mí</SectionHeading>
           <div className="max-w-2xl space-y-4 text-base text-muted-foreground">
             <p>
               Soy un apasionado de la tecnología con más de 15 años de experiencia diseñando e implementando
@@ -177,22 +188,22 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4">
+          <div className="grid grid-cols-2 gap-4 py-4 sm:grid-cols-4">
             <div className="text-center">
               <div className="text-3xl font-bold text-gradient">15+</div>
-              <div className="text-xs text-muted-foreground mt-1">Años de experiencia</div>
+              <div className="mt-1 text-xs text-muted-foreground">Años de experiencia</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-gradient">{projects.length}</div>
-              <div className="text-xs text-muted-foreground mt-1">Proyectos</div>
+              <div className="mt-1 text-xs text-muted-foreground">Proyectos</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-gradient">{postCount}</div>
-              <div className="text-xs text-muted-foreground mt-1">Posts</div>
+              <div className="mt-1 text-xs text-muted-foreground">Posts</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-gradient">∞</div>
-              <div className="text-xs text-muted-foreground mt-1">Curiosidad</div>
+              <div className="mt-1 text-xs text-muted-foreground">Curiosidad</div>
             </div>
           </div>
 
@@ -201,7 +212,7 @@ export default async function Home() {
               href="https://github.com/jdinamarca"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-foreground hover:text-brand transition-colors"
+              className="text-sm font-medium text-foreground transition-colors hover:text-brand"
             >
               GitHub
             </Link>
@@ -209,26 +220,23 @@ export default async function Home() {
               href="https://linkedin.com/in/jdinamarca"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-foreground hover:text-brand transition-colors"
+              className="text-sm font-medium text-foreground transition-colors hover:text-brand"
             >
               LinkedIn
             </Link>
             <a
               href="mailto:jdinamarca@snakode.com"
-              className="text-sm font-medium text-foreground hover:text-brand transition-colors"
+              className="text-sm font-medium text-foreground transition-colors hover:text-brand"
             >
               Email
             </a>
           </div>
         </div>
+      </section>
 
-        <div className="mt-20 space-y-4">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            <Briefcase className="size-3.5" />
-            Experiencia
-          </div>
-          <ExperienceTimeline />
-        </div>
+      <section className="container mx-auto max-w-4xl px-4 py-16">
+        <SectionHeading icon={Briefcase}>Experiencia</SectionHeading>
+        <ExperienceTimeline />
       </section>
     </div>
   );

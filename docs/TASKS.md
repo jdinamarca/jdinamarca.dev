@@ -116,10 +116,10 @@
 #### 2. Diferenciar `/lab` ✅
 - [x] `/lab` con estética terminal/notebook propia: hero `$ ls ~/lab --experiments` + `AI Lab`, fondo grid+radial, y `LabCard` (celdas tipo `exp_NNN.ipynb` con tech `[run]`, repo/demo y numeración por recencia). Ya no reusa `PostCard`.
 
-#### 3. Ritmo visual de la landing
-- [ ] Romper la monotonía vertical: alternar fondo/ancho en 1-2 secciones (ej. "Sobre mí" o "Experiencia" full-bleed con `bg-card`)
-- [ ] Semántica: un `<section>` por bloque con su `<h2>` (a11y + jerarquía de encabezados)
-- [ ] Single source of truth para el stack (hoy duplicado en `page.tsx`, `playing-with.ts` y `CLAUDE.md`)
+#### 3. Ritmo visual de la landing ✅
+- [x] Romper la monotonía vertical: "Sobre mí" como banda full-bleed (`border-y border-border bg-card/30`) para separar visualmente del resto.
+- [x] Semántica: cada bloque ahora es un `<section>` con `<h2>` (componente `SectionHeading`) — a11y + jerarquía de encabezados.
+- [x] Single source of truth del stack: `stack`/`focus` extraídos a `src/data/stack.ts` (antes inline en `page.tsx`). Nota: `playing-with.ts` es otra lista distinta, no era duplicado real.
 
 ---
 
