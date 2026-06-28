@@ -23,11 +23,16 @@ export function NewsletterForm() {
         body: JSON.stringify({ email }),
       });
 
+      const data = (await response.json().catch(() => null)) as
+        | { message?: string; error?: string }
+        | null;
+
       if (!response.ok) {
-        throw new Error("subscribe failed");
+        toast.error(data?.error ?? "Error al suscribirse. Por favor intenta de nuevo.");
+        return;
       }
 
-      toast.success("¡Gracias por suscribirte!");
+      toast.success(data?.message ?? "¡Gracias por suscribirte!");
       setEmail("");
     } catch {
       toast.error("Error al suscribirse. Por favor intenta de nuevo.");

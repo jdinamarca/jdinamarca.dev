@@ -153,8 +153,10 @@
 ### Configuración pendiente (deploy)
 - [x] **Giscus:** activar GitHub Discussions en el repo + instalar app giscus → pegar
   `GISCUS_REPO_ID` y `GISCUS_CATEGORY_ID` reales en `src/components/comments/GiscusComments.tsx` ✅
-- [ ] **Newsletter (Buttondown):** crear cuenta en buttondown.email → añadir API key a
-  `.env.local` (`BUTTONDOWN_API_KEY`) → conectar `/api/newsletter/subscribe` con la API de Buttondown
+- [x] **Newsletter (Buttondown):** cuenta creada, `BUTTONDOWN_API_KEY` en `.env.local` + Vercel,
+  y `/api/newsletter/subscribe` cableado a la API real (`POST api.buttondown.com/v1/subscribers`,
+  auth `Token`, campo `email_address`). Falla seguro si falta la key; maneja duplicados y errores.
+  Descripción, subject y welcome email configurados en Buttondown.
 
 ### Orden recomendado de ejecución
 1. ~~**[F2]** Analytics~~ ~~**[F4]** RSS~~ ✅ Completados
