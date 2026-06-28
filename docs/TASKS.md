@@ -113,8 +113,8 @@
 - [x] Setear `metadataBase` en el root layout (arregla OG/Twitter que resolvían a `http://localhost:3000`)
 - [x] Stats de la landing reales: proyectos desde `projects.json` (`projects.length`) y posts vía `getPublishedPostCount()` (agregación `count()`). Años (15+) y curiosidad (∞) se mantienen.
 
-#### 2. Diferenciar `/lab`
-- [ ] Que `/lab` se sienta distinto del blog (no una copia): hero/intro propios de "AI Lab", no solo listado de posts `experimento`
+#### 2. Diferenciar `/lab` ✅
+- [x] `/lab` con estética terminal/notebook propia: hero `$ ls ~/lab --experiments` + `AI Lab`, fondo grid+radial, y `LabCard` (celdas tipo `exp_NNN.ipynb` con tech `[run]`, repo/demo y numeración por recencia). Ya no reusa `PostCard`.
 
 #### 3. Ritmo visual de la landing
 - [ ] Romper la monotonía vertical: alternar fondo/ancho en 1-2 secciones (ej. "Sobre mí" o "Experiencia" full-bleed con `bg-card`)
