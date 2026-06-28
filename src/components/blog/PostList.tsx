@@ -15,7 +15,7 @@ const dateFmt = new Intl.DateTimeFormat("es-ES", {
   year: "numeric",
 });
 
-const categoryLabel: Record<NonNullable<Post["category"]>, string> = {
+const categoryLabel: Record<string, string> = {
   opinion: "Opinión",
   tutorial: "Tutorial",
   arquitectura: "Arquitectura",
@@ -199,7 +199,7 @@ function PostRow({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{post.title || "(sin título)"}</p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-mono">{categoryLabel[post.category ?? "experimento"]}</span>
+          <span className="font-mono">{categoryLabel[post.category ?? "experimento"] ?? post.category}</span>
           <span aria-hidden>·</span>
           <time dateTime={post.createdAt}>
             {dateFmt.format(new Date(post.createdAt))}

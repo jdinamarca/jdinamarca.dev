@@ -9,21 +9,23 @@ const dateFmt = new Intl.DateTimeFormat("es-ES", {
   year: "numeric",
 });
 
-const categoryLabel: Record<NonNullable<Post["category"]>, string> = {
+const categoryLabel: Record<string, string> = {
   opinion: "Opinión",
   tutorial: "Tutorial",
   arquitectura: "Arquitectura",
   experimento: "Experimento",
 };
 
-const categoryColors: Record<NonNullable<Post["category"]>, { border: string; text: string }> = {
+const categoryColors: Record<string, { border: string; text: string }> = {
   opinion: { border: "border-purple-500/50", text: "text-purple-400" },
   tutorial: { border: "border-green-500/50", text: "text-green-400" },
   arquitectura: { border: "border-blue-500/50", text: "text-blue-400" },
   experimento: { border: "border-orange-500/50", text: "text-orange-400" },
 };
 
-const levelLabel: Record<NonNullable<Post["level"]>, { label: string; emoji: string }> = {
+const defaultCategoryColor = { border: "border-border", text: "text-muted-foreground" };
+
+const levelLabel: Record<string, { label: string; emoji: string }> = {
   basico: { label: "Básico", emoji: "🌱" },
   medio: { label: "Medio", emoji: "🌿" },
   avanzado: { label: "Avanzado", emoji: "🌳" },
@@ -41,8 +43,8 @@ export function PostCard({ post }: { post: Post }) {
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {post.category && (
-              <Badge variant="outline" className={`${categoryColors[post.category].border} ${categoryColors[post.category].text}`}>
-                {categoryLabel[post.category]}
+              <Badge variant="outline" className={`${(categoryColors[post.category] ?? defaultCategoryColor).border} ${(categoryColors[post.category] ?? defaultCategoryColor).text}`}>
+                {categoryLabel[post.category] ?? post.category}
               </Badge>
             )}
             {post.level && (
