@@ -123,24 +123,96 @@
 
 ---
 
-## ❌ Pendientes — verificado que NO existen en código
+## ✅ Completadas (actualizadas)
 
-### Deploy (manual)
-- [ ] Deploy a Vercel (importar repo, env vars, build verde)
-- [ ] Conectar dominio `jdinamarca.dev` en Vercel
-- [ ] Añadir `jdinamarca.dev` + `*.vercel.app` a dominios autorizados en Firebase Auth
+### Deploy y dominio
+- [x] Deploy a Vercel (automático al push a main)
+- [x] Conectar dominio `jdinamarca.dev` en Vercel
+- [x] Añadir `jdinamarca.dev` a dominios autorizados en Firebase Auth
+- [x] Login de Google funcionando en producción
 
 ---
 
-## 🔵 Backlog (no urgente)
+## 🔵 Backlog (siguientes pasos)
 
-- [ ] Filtros por tags en `/blog` (`TagFilter` client component)
-- [ ] Búsqueda simple en el blog (client-side sobre posts cargados)
-- [ ] RSS feed (`/feed.xml/route.ts`)
-- [ ] Vercel Analytics (`@vercel/analytics`)
-- [ ] Loading skeletons (`loading.tsx`) + error boundary (`error.tsx`) en `/blog`
-- [ ] Limpieza de imágenes huérfanas en Storage al eliminar/reemplazar post
-- [ ] Newsletter / comentarios (opcional)
+> Modelos GLM por tier: **T1** `glm-4.6` (arquitectura, bug complejo, multi-archivo) ·
+> **T2** `glm-4.5-air` (feature estándar siguiendo patrón) ·
+> **T3** `glm-4-flash` (1 archivo, config, docs, Tailwind).
+
+### SEO y funcionalidad
+- [ ] Filtros por tags en `/blog` (`TagFilter` client component) — **T2 · `glm-4.5-air`**
+- [ ] Búsqueda simple en el blog (client-side sobre posts cargados) — **T2 · `glm-4.5-air`**
+- [x] RSS feed (`/feed.xml/route.ts`) — **T3 · `glm-4-flash`** ✅
+- [x] Vercel Analytics (`@vercel/analytics`) — **T3 · `glm-4-flash`** ✅
+
+### UX y robustez
+- [ ] Loading skeletons (`loading.tsx`) + error boundary (`error.tsx`) en `/blog` — **T2 · `glm-4.5-air`**
+- [ ] Limpieza de imágenes huérfanas en Storage al eliminar/reemplazar post — **T1 · `glm-4.6`**
+- [ ] Newsletter / comentarios (opcional) — **T1 · `glm-4.6`**
+
+### Orden recomendado de ejecución
+1. ~~**[F2]** Analytics~~ ~~**[F4]** RSS~~ ✅ Completados
+2. **[F1]** Filtros → **[F3]** Búsqueda (necesitan Input component primero)
+3. **[F6]** Skeletons (necesita Skeleton component primero)
+4. **[F5]** Limpieza Storage (necesita más detalle)
+5. **[F7]** Newsletter (necesita diseño previo)
+
+### Detalle de cada tarea
+
+#### [F1] Filtro por tags en `/blog` — T2 · `glm-4.5-air` — ⚠️ Requiere prerequisito
+- **Modelo:** `glm-4.5-air`
+- **Prerequisito:** No existe `Input` en `src/components/ui/`. Instalar primero: `npx shadcn@latest add input`
+- **Archivos:** crear `src/components/blog/TagFilter.tsx` (client), editar `src/app/blog/page.tsx`
+- **Patrón a seguir:**
+  - `blog/page.tsx` es server component (fetch con `getPosts`) → pasa `posts` como prop al client component
+  - Imitar estructura de `PostCard.tsx` para los badges de tags
+  - `Post` interface tiene `tags?: string[]` (`src/types/index.ts:22`)
+- **Pasos:** extraer tags únicos de `posts.flatMap(p => p.tags ?? [])`, badges clicables con estado `selectedTag`, filtrar lista, mostrar todos si no hay selección
+- **⚠️ Regla:** no usar `setState` síncrono en `useEffect` (lint `react-hooks/set-state-in-effect`)
+- **Aceptación:** click en tag filtra la lista · lint ✓ build ✓
+
+#### [F3] Búsqueda simple en el blog — T2 · `glm-4.5-air` — ⚠️ Requiere prerequisito
+- **Modelo:** `glm-4.5-air`
+- **Prerequisito:** mismo que F1 (necesita `Input` component)
+- **Recomendación:** combinar F1 + F3 en un solo componente `BlogFilters.tsx` (tags + búsqueda juntas)
+- **Archivos:** crear `src/components/blog/SearchPosts.tsx` o fusionar en `TagFilter`
+- **Pasos:** input con filtrado case-insensitive sobre `title`, `excerpt` y `tags`
+- **Aceptación:** escribir filtra la lista en vivo · lint ✓ build ✓
+
+#### [F6] Loading skeletons + error boundary — T2 · `glm-4.5-air` — ⚠️ Requiere prerequisito
+- **Modelo:** `glm-4.5-air`
+- **Prerequisito:** No existe `Skeleton` en `src/components/ui/`. Instalar: `npx shadcn@latest add skeleton`
+- **Archivos:** crear `src/app/blog/loading.tsx`, `src/app/blog/error.tsx`, `src/app/blog/[slug]/loading.tsx`
+- **error.tsx debe ser client component:**
+  ```typescript
+  "use client";
+  export default function Error({ reset }: { error: Error; reset: () => void }) { ... }
+  ```
+- **loading.tsx:** skeleton imitando `PostCard` (Card con rectángulos grises en lugar de texto)
+- **Aceptación:** mientras carga `/blog` se ve skeleton · lint ✓ build ✓
+
+#### [F5] Limpieza de imágenes huérfanas en Storage — T1 · `glm-4.6` — ❌ Insuficiente, necesita más detalle
+- **Modelo:** `glm-4.6` (complejo, multi-archivo, regex, HTML parsing)
+- **Gaps críticos a resolver antes de ejecutar:**
+  1. **`PostSummary` no tiene `coverImage`** (`src/types/index.ts:25-28`). Opciones:
+     - Añadir `coverImage?` a `PostSummary` y al API `/api/admin/posts`
+     - O hacer fetch del post completo en `handleDelete`
+  2. **Extracción de path de URL de Storage:** las URLs son tipo:
+     `https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media&token=...`
+     Regex necesaria: `decodeURIComponent(url.split("/o/")[1].split("?")[0])`
+  3. **Imágenes inline en content:** el HTML del post tiene `<img src="...">` que apuntan a Storage. Necesita regex para extraer todas las URLs: `content.match(/<img[^>]+src="([^"]+)"/g)`
+  4. **Import:** `deleteObject, ref` de `firebase/storage` (client SDK)
+  5. **Patrón best-effort:** envolver cada `deleteObject` en try/catch individual, no fallar todo si una imagen no se borra
+- **Archivos a tocar:** `PostList.tsx` (handleDelete), `PostEditor.tsx` (handleCoverUpload — borrar anterior), posiblemente `src/types/index.ts` y `/api/admin/posts`
+- **Aceptación:** eliminar un post borra cover + imágenes inline de Storage · lint ✓ build ✓
+
+#### [F7] Newsletter / comentarios — T1 · `glm-4.6` — ❌ Insuficiente, necesita diseño previo
+- **Modelo:** `glm-4.6`
+- **Bloqueadores:**
+  - No hay decisión de servicio. Opciones: Mailchimp/Buttondown (newsletter), Giscus/utterances (comentarios)
+  - No hay patrón de formularios en el codebase
+  - No hay componentes de form adicionales (Input, Textarea, Form)
+- **Recomendación:** posponer hasta decidir servicio y diseñar la UI. Documentar como ADR cuando se elija.
 
 ---
 
