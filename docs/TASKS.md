@@ -197,19 +197,12 @@
 - **loading.tsx:** skeleton imitando `PostCard` (Card con rectángulos grises en lugar de texto)
 - **Aceptación:** mientras carga `/blog` se ve skeleton · lint ✓ build ✓
 
-#### [F5] Limpieza de imágenes huérfanas en Storage — T1 · `glm-4.6` — ❌ Insuficiente, necesita más detalle
-- **Modelo:** `glm-4.6` (complejo, multi-archivo, regex, HTML parsing)
-- **Gaps críticos a resolver antes de ejecutar:**
-  1. **`PostSummary` no tiene `coverImage`** (`src/types/index.ts:25-28`). Opciones:
-     - Añadir `coverImage?` a `PostSummary` y al API `/api/admin/posts`
-     - O hacer fetch del post completo en `handleDelete`
-  2. **Extracción de path de URL de Storage:** las URLs son tipo:
-     `https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media&token=...`
-     Regex necesaria: `decodeURIComponent(url.split("/o/")[1].split("?")[0])`
-  3. **Imágenes inline en content:** el HTML del post tiene `<img src="...">` que apuntan a Storage. Necesita regex para extraer todas las URLs: `content.match(/<img[^>]+src="([^"]+)"/g)`
-  4. **Import:** `deleteObject, ref` de `firebase/storage` (client SDK)
-  5. **Patrón best-effort:** envolver cada `deleteObject` en try/catch individual, no fallar todo si una imagen no se borra
-- **Archivos a tocar:** `PostList.tsx` (handleDelete), `PostEditor.tsx` (handleCoverUpload — borrar anterior), posiblemente `src/types/index.ts` y `/api/admin/posts`
+#### [F5] Limpieza de imágenes huérfanas en Storage — T1 · `glm-4.6` — ✅ Completado
+- **Implementado server-side** en `/api/admin/posts/[id]` (Admin SDK):
+  - **DELETE:** obtiene el post antes de eliminarlo, extrae cover + imágenes inline (`<img src>`) del HTML, las borra de Storage con best-effort (try/catch por imagen)
+  - **PATCH:** compara imágenes del contenido actual vs nuevo, elimina las que ya no se usan
+  - **PostSummary:** ahora incluye `coverImage` (`src/types/index.ts` + `/api/admin/posts` GET)
+  - Extracción de path: `decodeURIComponent(url.split("/o/")[1].split("?")[0])` adaptado a URLs `storage.googleapis.com`
 - **Aceptación:** eliminar un post borra cover + imágenes inline de Storage · lint ✓ build ✓
 
 #### [F7] Newsletter / comentarios — T1 · `glm-4.6` — ✅ Completado
