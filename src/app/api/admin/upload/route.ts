@@ -31,12 +31,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "no file provided" }, { status: 400 });
     }
 
+    const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
+    const candidates = [
+      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      projectId ? `${projectId}.firebasestorage.app` : null,
+      projectId ? `${projectId}.appspot.com` : null,
+    ].filter((v): v is string => Boolean(v));
+
+    let bucketName: string | null = null;
+    for (const candidate of candidates) {
+      try {
+        const bucket = adminStorage.bucket(candidate);
+        const [exists] = await bucket.exists();
+        if (exists) {
+          bucketName = candidate;
+          break;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    if (!bucketName) {
+      return NextResponse.json({
+        error: `no bucket found. tried: ${candidates.join(", ")}`,
+      }, { status: 500 });
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     const safeName = (file.name || "upload").replace(/[^a-zA-Z0-9._-]/g, "_");
     const filename = `${folder}/${Date.now()}_${safeName}`;
-    const bucket = adminStorage.bucket();
+    const bucket = adminStorage.bucket(bucketName);
     const fileRef = bucket.file(filename);
 
     await fileRef.save(buffer, {
@@ -45,7 +72,7 @@ export async function POST(request: Request) {
       },
     });
 
-    const url = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(filename).replace(/%2F/g, "/")}`;
+    const url = `https://storage.googleapis.com/${bucketName}/${filename.split("/").map(encodeURIComponent).join("/")}`;
 
     return NextResponse.json({ url });
   } catch (error) {
