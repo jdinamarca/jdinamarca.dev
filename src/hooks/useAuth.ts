@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithRedirect, signOut, GoogleAuthProvider, User } from "firebase/auth";
+import { onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, User } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 
 const provider = new GoogleAuthProvider();
@@ -22,7 +22,7 @@ export function useAuth() {
 
   const isAdmin = user?.email === ADMIN_EMAIL;
 
-  const login = () => signInWithRedirect(getFirebaseAuth(), provider);
+  const login = () => signInWithPopup(getFirebaseAuth(), provider);
   const logout = () => signOut(getFirebaseAuth());
 
   return { user, loading, isAdmin, login, logout };
