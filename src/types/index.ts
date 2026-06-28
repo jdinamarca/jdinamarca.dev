@@ -22,6 +22,11 @@ export interface Post {
   tags?: string[];
 }
 
+export type PostSummary = Pick<
+  Post,
+  "id" | "title" | "slug" | "category" | "published" | "createdAt"
+>;
+
 export interface Project {
   id: string;
   title: string;

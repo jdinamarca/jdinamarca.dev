@@ -2,21 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  collection,
-  doc,
-  getDocs,
-  orderBy,
-  query,
-  deleteDoc,
-  Timestamp,
-} from "firebase/firestore";
+import { doc, getDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import { Trash2, ExternalLink, Loader2, Pencil } from "lucide-react";
-import { getFirebaseDb } from "@/lib/firebase";
+import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import type { Post } from "@/types";
+import type { Post, PostSummary } from "@/types";
 
 const dateFmt = new Intl.DateTimeFormat("es-ES", {
   day: "numeric",
@@ -48,50 +40,28 @@ export function PostList({
   onRefresh: () => void;
   onEdit: (post: Post) => void;
 }) {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     (async () => {
       setLoading(true);
       try {
-        const snap = await getDocs(
-          query(collection(getFirebaseDb(), "posts"), orderBy("createdAt", "desc"))
-        );
-        if (!active) return;
-        const list: Post[] = snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            title: data.title ?? "",
-            slug: data.slug ?? "",
-            excerpt: data.excerpt ?? "",
-            content: data.content ?? "",
-            coverImage: data.coverImage ?? undefined,
-            tags: Array.isArray(data.tags) ? data.tags : [],
-            category: data.category ?? "experimento",
-            published: Boolean(data.published),
-            createdAt: toISO(data.createdAt),
-            updatedAt: toISO(data.updatedAt),
-            level: data.level,
-            readTime: data.readTime,
-            tech: Array.isArray(data.tech) ? data.tech : undefined,
-            series: data.series,
-            seriesPart: data.seriesPart,
-            seriesTotal: data.seriesTotal,
-            repo: data.repo,
-            demo: data.demo,
-          };
+        const token = await getFirebaseAuth().currentUser?.getIdToken();
+        if (!token) throw new Error("No hay sesión activa");
+        const res = await fetch("/api/admin/posts", {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { posts: list } = (await res.json()) as { posts: PostSummary[] };
+        if (!active) return;
         setPosts(list);
       } catch (err) {
         console.error("Error cargando posts:", err);
-        const code = (err as { code?: string }).code;
-        toast.error(
-          code ? `${code} (revisa las reglas de Firestore)` : "No se pudieron cargar los posts"
-        );
+        toast.error("No se pudieron cargar los posts");
       } finally {
         if (active) setLoading(false);
       }
@@ -101,7 +71,45 @@ export function PostList({
     };
   }, [refreshKey]);
 
-  const handleDelete = async (post: Post) => {
+  const handleEdit = async (summary: PostSummary) => {
+    setEditingId(summary.id);
+    try {
+      const snap = await getDoc(doc(getFirebaseDb(), "posts", summary.id));
+      const data = snap.data();
+      if (!data) {
+        toast.error("El post ya no existe");
+        return;
+      }
+      onEdit({
+        id: snap.id,
+        title: data.title ?? "",
+        slug: data.slug ?? "",
+        excerpt: data.excerpt ?? "",
+        content: data.content ?? "",
+        coverImage: data.coverImage ?? undefined,
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        category: data.category ?? "experimento",
+        published: Boolean(data.published),
+        createdAt: toISO(data.createdAt),
+        updatedAt: toISO(data.updatedAt),
+        level: data.level,
+        readTime: data.readTime,
+        tech: Array.isArray(data.tech) ? data.tech : undefined,
+        series: data.series,
+        seriesPart: data.seriesPart,
+        seriesTotal: data.seriesTotal,
+        repo: data.repo,
+        demo: data.demo,
+      });
+    } catch (err) {
+      console.error("Error cargando el post:", err);
+      toast.error("No se pudo abrir el post para editar");
+    } finally {
+      setEditingId(null);
+    }
+  };
+
+  const handleDelete = async (post: PostSummary) => {
     if (!window.confirm(`¿Eliminar "${post.title}"? Esta acción no se puede deshacer.`)) return;
     setDeletingId(post.id);
     try {
@@ -145,8 +153,9 @@ export function PostList({
               key={post.id}
               post={post}
               deleting={deletingId === post.id}
+              editing={editingId === post.id}
               onDelete={handleDelete}
-              onEdit={onEdit}
+              onEdit={handleEdit}
             />
           ))}
         </Section>
@@ -158,8 +167,9 @@ export function PostList({
               key={post.id}
               post={post}
               deleting={deletingId === post.id}
+              editing={editingId === post.id}
               onDelete={handleDelete}
-              onEdit={onEdit}
+              onEdit={handleEdit}
             />
           ))}
         </Section>
@@ -190,13 +200,15 @@ function Section({
 function PostRow({
   post,
   deleting,
+  editing,
   onDelete,
   onEdit,
 }: {
-  post: Post;
+  post: PostSummary;
   deleting: boolean;
-  onDelete: (post: Post) => void;
-  onEdit: (post: Post) => void;
+  editing: boolean;
+  onDelete: (post: PostSummary) => void;
+  onEdit: (post: PostSummary) => void;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
@@ -223,9 +235,10 @@ function PostRow({
         size="icon-sm"
         aria-label="Editar post"
         className="shrink-0"
+        disabled={editing}
         onClick={() => onEdit(post)}
       >
-        <Pencil />
+        {editing ? <Loader2 className="animate-spin" /> : <Pencil />}
       </Button>
       {post.published && (
         <Link href={`/blog/${post.slug}`} className="shrink-0">
