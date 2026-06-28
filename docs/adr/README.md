@@ -27,3 +27,4 @@ de jdinamarca.dev. Cada ADR sigue el formato:
 - [0004. Lectura SSR vía Admin SDK; reglas Firestore/Storage admin-only](0004-lectura-ssr-via-admin-sdk-y-reglas.md)
 - [0005. Tiptap v3: StarterKit incluye Link; `immediatelyRender: true`](0005-tiptap-v3-starterkit-incluye-link.md)
 - [0006. Portafolio: datos en JSON estático vs Firestore](0006-portafolio-datos-json-estatico.md)
+- [0007. Lab: reutilizar categoría `experimento`](0007-lab-categoria-experimento.md)

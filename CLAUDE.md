@@ -1,15 +1,18 @@
-# jdinamarca.dev — Contexto del proyecto para Claude
+# jdinamarca.dev — Contexto del proyecto
 
-> Este archivo es leído automáticamente por Claude al iniciar cada sesión.
-> Mantenerlo actualizado permite retomar el trabajo desde cualquier sesión.
+> Este archivo lo lee el modelo al iniciar cada sesión. Mantenerlo actualizado
+> permite retomar el trabajo desde cualquier sesión sin explicaciones.
+>
+> **Nota:** el código es la fuente de verdad. Si este snapshot difiere del
+> código real, gana el código. Verificado contra commit `96b3a7c` (rama `main`).
 
 ## ¿Qué es este proyecto?
 
 Sitio web personal en **jdinamarca.dev** con enfoque **"Dev + AI Lab"**:
-- Portafolio de proyectos
-- Blog técnico (tech, IA, desarrollo)
-- Sección Lab (experimentos documentados con IA)
-- Panel admin con editor WYSIWYG para publicar posts con imágenes
+- Portafolio de proyectos (`/projects`)
+- Blog técnico (`/blog`)
+- Sección Lab — experimentos con IA (`/lab`)
+- Panel admin con editor WYSIWYG (`/admin`)
 
 **Dueño:** Jason Dinamarca — jdinamarca@snakode.com
 
@@ -19,87 +22,150 @@ Sitio web personal en **jdinamarca.dev** con enfoque **"Dev + AI Lab"**:
 
 | Capa | Tecnología |
 |---|---|
-| Framework | Next.js 16 (App Router, TypeScript) |
-| Estilos | Tailwind CSS v4 + shadcn/ui (usa `@base-ui/react`) |
-| Editor de posts | Tiptap |
+| Framework | Next.js 16 (App Router, TypeScript strict) |
+| Estilos | Tailwind CSS v4 + shadcn/ui (base `@base-ui/react`, style `base-nova`) |
+| Editor de posts | Tiptap v3 |
 | Auth | Firebase Auth (Google login) |
 | Base de datos | Firebase Firestore |
 | Almacenamiento | Firebase Storage (imágenes) |
-| Deploy frontend | Vercel |
+| Deploy | Vercel (pendiente) |
+
+**Path alias:** `@/*` → `src/*`.
 
 ---
 
-## Estructura de archivos clave
+## Comandos
+
+```bash
+npm run dev        # dev server → http://localhost:3000
+npm run build      # build de producción
+npm run lint       # ESLint (eslint-config-next)
+npx tsc --noEmit   # typecheck (no hay script dedicado)
+```
+
+**Verificación obligatoria tras cada cambio:** `npm run lint` + `npm run build`.
+
+---
+
+## Reglas de código — OBLIGATORIO
+
+1. **shadcn Button NO tiene `asChild`** (usa `@base-ui/react`, no Radix).
+   Patrón correcto: `<Link href="/ruta"><Button>Texto</Button></Link>`.
+2. **Firebase siempre con getters lazy** en cliente; Admin SDK en server:
+   - ✅ `getFirebaseAuth()`, `getFirebaseDb()`, `getFirebaseStorage()` (cliente)
+   - ✅ `adminDb` desde `@/lib/firebase-admin` (server actions / SSR)
+   - ❌ `import { auth, db } from "@/lib/firebase"` a nivel de módulo en server
+3. **Firebase Admin SDK** solo en Server Actions / Route Handlers / server
+   components. El blog lee vía `src/lib/posts.ts` (admin SDK).
+4. Páginas con datos dinámicos de Firestore: `export const dynamic = "force-dynamic"`.
+5. Imágenes de Firebase Storage: usar `next/image` (remote patterns en `next.config.ts`).
+6. **Prohibido `any`.** TS está en `strict`. Tipar todo.
+7. **Prohibido `setState` síncrono dentro de `useEffect`** (lo bloquea el lint:
+   `react-hooks/set-state-in-effect`). Ver `ThemeToggle`/`PostList`.
+8. **No añadir comentarios** salvo que aporten contexto no obvio.
+9. **Next.js 16 ≠ lo que sabes.** Leer `node_modules/next/dist/docs/` antes de
+   usar APIs/conventions que puedan haber cambiado.
+
+---
+
+## Estructura de archivos
 
 ```
 src/
+├── data/                    # Datos estáticos (experience.ts, playing-with.ts, projects.json)
+├── types/index.ts           # Interfaces Post, Project
 ├── lib/
-│   ├── firebase.ts          # Lazy getters browser-only
-│   ├── firebase-admin.ts    # Admin SDK para server actions / SSR
+│   ├── firebase.ts          # Lazy getters browser-only (Auth, Firestore, Storage)
+│   ├── firebase-admin.ts    # Admin SDK server-side
 │   ├── posts.ts             # Lectura de posts (SSR via admin SDK)
 │   └── utils.ts             # cn()
-├── hooks/
-│   └── useAuth.ts           # Google Auth + isAdmin check por email
-├── types/index.ts           # Interfaces: Post, Project
+├── hooks/useAuth.ts         # Google Auth + isAdmin check por email
 ├── components/
-│   ├── layout/Navbar.tsx    # Navbar sticky con login/avatar/dropdown
-│   ├── layout/Footer.tsx
-│   ├── layout/ThemeToggle.tsx
-│   ├── theme-provider.tsx   # next-themes
-│   ├── blog/PostEditor.tsx  # Editor Tiptap con subida de imágenes
-│   └── blog/PostCard.tsx    # Tarjeta de post para el listado
+│   ├── ui/                  # shadcn/ui components
+│   ├── layout/              # Navbar, Footer, ThemeToggle (dark/light)
+│   ├── blog/                # PostEditor, PostCard, PostList
+│   ├── portfolio/           # ProjectCard
+│   └── home/                # ExperienceTimeline, CurrentlyPlaying
 └── app/
-    ├── page.tsx             # Landing hero
+    ├── layout.tsx           # Root: Navbar + Footer + Toaster + ThemeProvider
+    ├── page.tsx             # Landing completa (hero + stack + playing + projects + posts + about + experiencia)
+    ├── sitemap.ts           # Sitemap dinámico
     ├── blog/page.tsx        # Listado de posts (SSR)
-    ├── blog/[slug]/page.tsx # Vista de post (SSR + prose + OG metadata)
-    ├── projects/page.tsx    # Portafolio (placeholder)
-    ├── lab/page.tsx         # Lab section (placeholder)
-    └── admin/page.tsx       # Panel admin protegido
+    ├── blog/[slug]/page.tsx # Vista de post (prose + OG/Twitter + JSON-LD + reading time)
+    ├── projects/page.tsx    # Portafolio (lee projects.json)
+    ├── lab/page.tsx         # ⚠️ copia del blog, sin filtrar por categoría (PENDIENTE)
+    └── admin/page.tsx       # Panel admin protegido (auth gate)
 ```
 
 ---
 
-## Reglas de código — IMPORTANTE
+## Estado actual (snapshot verificado)
 
-1. **shadcn Button no tiene `asChild`** — usar `<Link><Button>...</Button></Link>`.
-2. **Firebase siempre con getters lazy**, nunca instancias directas:
-   - ✅ `getFirebaseAuth()`, `getFirebaseDb()`, `getFirebaseStorage()`
-   - ❌ `import { auth, db } from "@/lib/firebase"`
-3. Páginas con Firebase Auth en cliente: agregar `export const dynamic = "force-dynamic"`.
-4. Firebase Admin SDK solo en Server Actions o Route Handlers. Las páginas de blog leen de Firestore vía `src/lib/posts.ts` (admin SDK) en server components — marcar con `export const dynamic = "force-dynamic"` para datos siempre frescos.
-5. Imágenes de Firebase Storage: usar `next/image` (remote patterns ya configurados en `next.config.ts` para `firebasestorage.googleapis.com`, `storage.googleapis.com`, `*.appspot.com`).
+### ✅ Completado
+- **Fundación:** scaffold, Firebase SDK (client + admin), auth Google, navbar,
+  footer, theme toggle dark/light, layout, editor Tiptap, `/admin` con auth gate.
+- **Firebase conectado:** proyecto `jdinamarcadev-c1f8b`, Auth, Firestore,
+  Storage, `.env.local` (no commiteado).
+- **Blog (lectura):** `posts.ts` (`getPosts`, `getPost`, `getPostsByCategory`,
+  `getRecentPosts`, `getPublishedSlugs`), `PostCard`, `/blog`, `/blog/[slug]`
+  con `prose` + metadata OG/Twitter + **JSON-LD BlogPosting** + reading time +
+  `generateStaticParams`.
+- **Admin completo:** lista borradores/publicados, crear, editar, eliminar,
+  cover image upload, manejo de errores con código Firebase.
+- **Reglas:** `firestore.rules` + `storage.rules` + `firebase.json`.
+- **Portafolio:** decisión ADR 0006 (JSON estático), `projects.json` (5
+  proyectos), `ProjectCard`, `/projects` con orden por año + empty state.
+- **Landing completa:** hero + badge "disponible", stack, currently playing,
+  proyectos destacados, últimos posts, sobre mí + stats, experiencia timeline.
+- **SEO parcial:** `sitemap.ts` (estáticas + dinámicas), metadata blog OG/Twitter,
+  JSON-LD. Repo en GitHub vía SSH (`origin` → `git@github.com:jdinamarca/jdinamarca.dev.git`).
+- **ADRs:** 0001–0006.
+
+### ❌ Pendiente (verificado que NO existe en código)
+- **`/lab` no diferenciado:** es copia de `/blog`, usa `getPosts()` (muestra
+  todos los posts), metadata dice "Blog". Falta `getPostsByCategory("lab")` +
+  metadata "Lab". **Inconsistencia de modelo:** las categorías son
+  `opinion|tutorial|arquitectura|experimento` (no existe `lab`).
+- **`robots.ts`:** no existe (necesario para SEO).
+- **`opengraph-image.tsx`:** no existe (OG image por defecto).
+- **Deploy Vercel** + dominio `jdinamarca.dev`.
+- **Dominios autorizados** en Firebase Auth para producción.
+
+### 🔵 Backlog (no urgente)
+- Filtros por tags en `/blog`.
+- Búsqueda en el blog.
+- RSS feed (`/feed.xml`).
+- Vercel Analytics.
+- Loading skeletons + error boundary en `/blog`.
+- Limpieza de imágenes huérfanas en Storage al eliminar post.
+
+---
+
+## Documentación del proyecto (en `docs/`)
+
+| Archivo | Rol |
+|---|---|
+| `docs/EXECUTION_PLAN.md` | Plan detallado tarea por tarea con modelo recomendado |
+| `docs/PHILOSOPHY.md` | Filosofía de trabajo con modelos (ahorro de tokens, ADRs) |
+| `docs/TASKS.md` | Checklist histórico de sesiones |
+| `docs/ROADMAP.md` | Visión de fases de alto nivel |
+| `docs/adr/` | Decisiones de arquitectura (0001–0006) |
 
 ---
 
 ## Variables de entorno
 
-Ver `.env.example` para la estructura completa. Archivo real: `.env.local` (no commiteado).
+Ver `.env.example`. Archivo real: `.env.local` (no commiteado, ignorado por git).
+Requiere Firebase Client SDK (`NEXT_PUBLIC_*`), Firebase Admin SDK
+(`FIREBASE_ADMIN_*`) y `NEXT_PUBLIC_ADMIN_EMAIL`.
 
 ---
 
-## Estado del proyecto
+## Flujo de trabajo
 
-- **Plan ejecutable detallado (tarea por tarea, con modelo recomendado):** `docs/EXECUTION_PLAN.md`
-- **Filosofía de trabajo con GLM (ahorro de tokens):** `docs/PHILOSOPHY.md`
-- **Decisiones de arquitectura (ADRs):** `docs/adr/README.md`
-- Roadmap por fases: `docs/ROADMAP.md`
-- Checklist de tareas: `docs/TASKS.md`
-
-> **Para continuar el trabajo:** leer `docs/EXECUTION_PLAN.md`, elegir la
-> siguiente tarea sin completar y seguir el flujo de `docs/PHILOSOPHY.md` §5.
-
-### Snapshot rápido del estado actual
-
-**Completado:** scaffold, Firebase SDK, auth con Google, navbar, footer, theme toggle (dark/light), layout, editor Tiptap, páginas placeholder, vercel.json, Firebase conectado. **Blog funcional (lectura):** `posts.ts` (admin SDK), `PostCard`, listado `/blog` y vista `/blog/[slug]` con `prose` + metadata dinámica + `next/image`. **Admin completo:** lista borradores/publicados, editar, eliminar, cover image, errores con código Firebase.
-
-**Próxima tarea a retomar:** `docs/EXECUTION_PLAN.md` → Fase B (Portafolio) empezando por **[B1]**.
-
----
-
-## Comandos útiles
-
-```bash
-npm run dev        # servidor de desarrollo → http://localhost:3000
-npm run build      # build de producción
-npm run lint       # linting
-```
+1. Una tarea atómica por sesión (1–3 archivos, una sola responsabilidad).
+2. Mostrar patrones, no inventar: "hazlo como `PostCard.tsx`".
+3. Tras terminar: `npm run lint` + `npm run build`. Arreglar si falla.
+4. Si se tomó una decisión no obvia → registrar ADR en `docs/adr/`.
+5. Actualizar `TASKS.md` / `EXECUTION_PLAN.md` al cerrar la sesión.
+6. No commitear salvo que se pida explícitamente.

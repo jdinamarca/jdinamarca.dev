@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getPosts } from "@/lib/posts";
-import { PostCard } from "@/components/blog/PostCard";
+import { BlogPageClient } from "@/components/blog/BlogPageClient";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -42,11 +42,7 @@ export default async function BlogPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
+        <BlogPageClient posts={posts} />
       )}
     </div>
   );

@@ -9,19 +9,26 @@
 
 ---
 
-## Snapshot — estado actual
+## Snapshot — estado actual (verificado contra commit `96b3a7c` + A1 completado)
 
 **Completado:**
 - Fase 1 (Fundación) ✓ — scaffold, Firebase SDK, auth Google, navbar, footer,
-  theme toggle, layout, editor Tiptap, `/admin` con auth gate.
-- Fase 2 (Firebase conectado) ✓ — proyecto, Auth, Firestore, Storage, `.env.local`.
+  theme toggle dark/light, layout, editor Tiptap, `/admin` con auth gate.
+- Fase 2 (Firebase conectado) ✓ — proyecto, Auth, Firestore, Storage, `.env.local`,
+  reglas `firestore.rules` + `storage.rules`.
 - Fase 3 (Blog lectura) ✓ — `src/lib/posts.ts`, `PostCard`, `/blog`, `/blog/[slug]`
-  con `prose` + metadata + cover image.
+  con `prose` + metadata OG/Twitter + **JSON-LD BlogPosting** + reading time.
 - Fase 3 (Admin) ✓ — lista borradores/publicados, **editar**, **eliminar**,
   **cover image**, manejo de errores con código Firebase.
-- Reglas `firestore.rules` + `storage.rules` + `firebase.json` ✓ (publicar en consola).
+- Fase B (Portafolio) ✓ — ADR 0006, `projects.json`, `ProjectCard`, `/projects`.
+- Fase C (Landing) ✓ — todas las secciones (C1–C6).
+- Fase D parcial ✓ — **D1 JSON-LD**, **D2 sitemap**, **D3 robots.ts** y **D4 opengraph-image.tsx** hechos.
+- Fase A (Lab) ✓ — **A1 completo 2026-06-27**: `/lab` filtra por `experimento`, metadata "Lab",
+  ADR 0007. A2 ya estaba ✓.
+- Repo en GitHub vía SSH ✓ (origin → `git@github.com:jdinamarca/jdinamarca.dev.git`).
 
-**Pendiente (este plan):** Lab, Portafolio, Landing completa, SEO, Deploy, Extras.
+**Pendiente (este plan):**
+- Fase E (Deploy Vercel + dominio), Fase F (extras).
 
 ---
 
@@ -47,22 +54,24 @@ Lab = posts con `category: "lab"`. No hace falta nuevo modelo de datos.
 - **Dependencias:** ninguna.
 - **Objetivo:** `/lab` lista posts publicados de categoría `lab`.
 - **Referencia:** imitar `src/app/blog/page.tsx` y `src/components/blog/PostCard.tsx`.
+- **⚠️ Estado real:** completado 2026-06-27. ADR 0007: Lab reutiliza categoría `experimento`.
 - **Archivos:**
   - Editar `src/app/lab/page.tsx`.
+  - Crear `docs/adr/0007-lab-categoria-experimento.md`.
 - **Pasos:**
-  1. Convertir `/lab/page.tsx` en **server component async** (quitar el placeholder).
-  2. Importar `getPostsByCategory` de `@/lib/posts`.
-  3. `const posts = await getPostsByCategory("lab");` (envolver en try/catch como `/blog`).
-  4. Reusar `PostCard` para renderizar el grid (igual que `/blog`).
-  5. `export const dynamic = "force-dynamic";`
-  6. Metadata: `{ title: "Lab", description: "Experimentos con IA y tech..." }`.
+  1. **Decidir modelo de Lab:** reutilizar `experimento` (ADR 0007).
+  2. Convertir `/lab/page.tsx` en server component async que usa
+     `getPostsByCategory("experimento")` (envolver en try/catch como `/blog`).
+  3. Reusar `PostCard` para renderizar el grid.
+  4. `export const dynamic = "force-dynamic";`
+  5. Metadata: `{ title: "Lab", description: "Experimentos técnicos con IA y desarrollo web..." }`.
 - **Aceptación:**
-  - [x] `/lab` devuelve 200 y muestra cards de posts `lab` publicados.
-  - [x] Si no hay, muestra empty state.
+  - [x] `/lab` devuelve 200 y muestra **solo** cards de posts `experimento`.
+  - [x] El título/heading y metadata dicen "Lab" (no "Blog").
   - [x] lint ✓ build ✓.
 
 ## [A2] ✅ Link de Lab apunta a `/blog/[slug]` — **T3**
-- **Dependencias:** A1.
+- **Dependencias:** A1 ✅.
 - **Objetivo:** los experimentos se leen en la misma vista que el blog (no
   duplicar `/lab/[slug]`).
 - **Decisión:** NO crear `/lab/[slug]`. `PostCard` ya enlaza a `/blog/[slug]`,
@@ -260,6 +269,7 @@ no necesitan editor). Documentar como ADR al ejecutar B1.
 
 ## [D3] ✅ `robots.ts` — **T3**
 - **Dependencias:** ninguna.
+- **Objetivo:** `/robots.txt` generado para indexación y SEO.
 - **Archivos:**
   - Crear `src/app/robots.ts`.
 - **Pasos:**
@@ -271,13 +281,14 @@ no necesitan editor). Documentar como ADR al ejecutar B1.
 
 ## [D4] ✅ Open Graph image por defecto — **T2**
 - **Dependencias:** ninguna.
+- **Objetivo:** OG image por defecto para compartir en redes sociales.
 - **Archivos:**
   - Crear `src/app/opengraph-image.tsx` (ImageResponse de `next/og`).
 - **Pasos:**
   1. `import { ImageResponse } from "next/og";`
   2. `export const runtime = "edge";` `export const size = { width: 1200, height: 630 };`
   3. Exportar `default async function OG()` que devuelve un JSX con el
-     nombre "Jason Dinamarca" + tagline + colores de marca (ver variables CSS).
+     nombre "Jason Dinamarca" + tagline + colores de marca.
   4. Next la usa automáticamente como `og:image` por defecto.
 - **Aceptación:**
   - [x] `/opengraph-image` devuelve un PNG 1200×630.
@@ -401,15 +412,11 @@ no necesitan editor). Documentar como ADR al ejecutar B1.
 
 ## Orden recomendado de ejecución
 
-1. **Publicar reglas** en consola (Firestore + Storage) — si no está hecho.
-2. **B1 → B2 → B3 → B4** (Portafolio, desbloquea C1).
-3. **A1** (Lab, rápido).
-4. **C1 → C2 → C3 → C4 → C5 → C6** (Landing completa).
-5. **D1 → D2 → D3 → D4** (SEO).
-6. **E1 → E2 → E3 → E4** (Deploy — en paralelo con lo anterior si se quiere).
-7. **F1 → F2 → F3 → F4 → F5 → F6** (Extras, por prioridad).
+1. **[E2 → E3 → E4]** Deploy Vercel + dominio + Firebase Auth domains (E1 GitHub ✓).
+2. **[F1 → F2 → F3 → F4 → F5 → F6]** Extras, por prioridad.
 
-Dependencias clave: C1 necesita B2; C2 necesita Fase 3 (✓); F5 es opcional.
+Ya completado: Fases 1–3, A (Lab), B (Portafolio), C (Landing), D (JSON-LD + sitemap + robots.ts + opengraph-image.tsx),
+reglas Firestore/Storage, repo GitHub.
 
 ---
 
