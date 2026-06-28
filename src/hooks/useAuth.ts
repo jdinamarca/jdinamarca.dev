@@ -25,7 +25,7 @@ export function useAuth() {
 
   const isAdmin = user?.email === ADMIN_EMAIL;
 
-  const login = () => signInWithPopup(getFirebaseAuth(), provider);
+  const login = () => signInWithRedirect(getFirebaseAuth(), provider);
   const logout = () => signOut(getFirebaseAuth());
 
   return { user, loading, isAdmin, login, logout };
