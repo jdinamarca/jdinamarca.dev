@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://jdinamarca.dev"),
   title: {
     default: "jdinamarca.dev",
     template: "%s | jdinamarca.dev",

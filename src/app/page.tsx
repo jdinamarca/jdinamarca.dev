@@ -5,7 +5,7 @@ import { ProjectCard } from "@/components/portfolio/ProjectCard";
 import { PostCard } from "@/components/blog/PostCard";
 import { CurrentlyPlaying } from "@/components/home/CurrentlyPlaying";
 import { ExperienceTimeline } from "@/components/home/ExperienceTimeline";
-import { getRecentPosts } from "@/lib/posts";
+import { getRecentPosts, getPublishedPostCount } from "@/lib/posts";
 import type { Post } from "@/types";
 import { ArrowRight, BookOpen, FlaskConical, Terminal, User, Briefcase } from "lucide-react";
 import type { Project } from "@/types";
@@ -28,8 +28,12 @@ const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
 
 export default async function Home() {
   let recentPosts: Post[] = [];
+  let postCount = 0;
   try {
-    recentPosts = await getRecentPosts(3);
+    [recentPosts, postCount] = await Promise.all([
+      getRecentPosts(3),
+      getPublishedPostCount(),
+    ]);
   } catch {
   }
 
@@ -179,11 +183,11 @@ export default async function Home() {
               <div className="text-xs text-muted-foreground mt-1">Años de experiencia</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-gradient">50+</div>
+              <div className="text-3xl font-bold text-gradient">{projects.length}</div>
               <div className="text-xs text-muted-foreground mt-1">Proyectos</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-gradient">10+</div>
+              <div className="text-3xl font-bold text-gradient">{postCount}</div>
               <div className="text-xs text-muted-foreground mt-1">Posts</div>
             </div>
             <div className="text-center">

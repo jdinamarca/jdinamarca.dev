@@ -50,12 +50,17 @@ function toPosts(snapshot: FirebaseFirestore.QuerySnapshot): Post[] {
 
 /** Posts publicados, ordenados por fecha de creación descendente. */
 export async function getPosts(): Promise<Post[]> {
-  const snapshot = await adminDb
-    .collection("posts")
-    .where("published", "==", true)
-    .orderBy("createdAt", "desc")
-    .get();
-  return toPosts(snapshot);
+  try {
+    const snapshot = await adminDb
+      .collection("posts")
+      .where("published", "==", true)
+      .orderBy("createdAt", "desc")
+      .get();
+    return toPosts(snapshot);
+  } catch (error) {
+    console.error("❌ Error en getPosts:", error);
+    throw error;
+  }
 }
 
 /** Posts publicados filtrados por categoría (opinion | tutorial | arquitectura | experimento). */
@@ -92,6 +97,16 @@ export async function getPost(slug: string): Promise<Post | null> {
     .get();
   if (snapshot.empty) return null;
   return serialize(snapshot.docs[0]);
+}
+
+/** Número de posts publicados (agregación count, no descarga documentos). */
+export async function getPublishedPostCount(): Promise<number> {
+  const snapshot = await adminDb
+    .collection("posts")
+    .where("published", "==", true)
+    .count()
+    .get();
+  return snapshot.data().count;
 }
 
 /** Todos los slugs publicados (para generateStaticParams / sitemap). */

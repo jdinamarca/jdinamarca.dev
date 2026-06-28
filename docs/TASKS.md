@@ -1,6 +1,7 @@
 # Tareas — jdinamarca.dev
 
 > Checklist de trabajo detallado. Actualizar al completar cada ítem.
+> Estado verificado contra commit `96b3a7c` (rama `main`) + Sesión 4 completada.
 > Para el roadmap por fases ver: `ROADMAP.md`
 
 ---
@@ -22,26 +23,15 @@
 - [x] Crear `src/components/layout/Footer.tsx`
 - [x] Actualizar `src/app/layout.tsx` — root layout con Navbar, Footer, Toaster, lang="es", dark mode
 - [x] Crear `src/app/page.tsx` — landing hero con nombre, bio, stack badges, CTA buttons
-- [x] Crear `src/app/blog/page.tsx` — placeholder
-- [x] Crear `src/app/projects/page.tsx` — placeholder
-- [x] Crear `src/app/lab/page.tsx` — placeholder
-- [x] Crear `src/app/admin/page.tsx` — panel admin con auth gate (login → isAdmin check → editor)
+- [x] Crear páginas placeholder: `/blog`, `/projects`, `/lab`, `/admin` (auth gate)
 - [x] Crear `src/components/blog/PostEditor.tsx` — editor Tiptap completo con subida de imágenes
-- [x] Crear `.env.local` (vacío, para llenar) y `.env.example` documentado
+- [x] Crear `.env.example` + `.gitignore` (excluye `.env.local`)
 - [x] Crear `vercel.json`
-- [x] Actualizar `.gitignore` — excluir .env.local, incluir .env.example
 - [x] Fix: Firebase lazy init para evitar error `auth/invalid-api-key` en build
 - [x] Fix: Remover `asChild` de Button (no soportado en base-ui)
 - [x] Verificar `npm run build` — build limpio sin errores ✓
-- [x] Crear `CLAUDE.md` — contexto del proyecto para sesiones futuras
-- [x] Crear `docs/ROADMAP.md` — fases del proyecto
-- [x] Crear `docs/TASKS.md` — este archivo
 
----
-
-## ✅ Bloqueante — RESUELTO (2026-06-04)
-
-### Conectar Firebase
+### Conectar Firebase — 2026-06-04
 
 - [x] Crear proyecto Firebase `jdinamarcadev-c1f8b`
 - [x] Authentication → Google provider habilitado
@@ -49,98 +39,126 @@
 - [x] Storage creado
 - [x] `.env.local` llenado con credenciales reales (client SDK + Admin SDK)
 
----
+### Sesión 2 — 2026-06-21
 
-## ✅ Completadas — Sesión 2 (2026-06-21)
-
-### Fase 3 — Blog funcional (lectura)
-
-- [x] Crear `src/lib/posts.ts` con funciones server-side (admin SDK):
-  - `getPosts()` — posts publicados ordenados por fecha desc
-  - `getPost(slug)` — un post publicado por slug
-  - `getPostsByCategory(category)` — filtrar por blog/lab/ai
-  - `getRecentPosts(limit)` — para la landing
-  - `getPublishedSlugs()` — para generateStaticParams / sitemap
-- [x] Crear `src/components/blog/PostCard.tsx` — tarjeta con categoría, fecha, tiempo de lectura, excerpt, tags, hover de marca
-- [x] Actualizar `src/app/blog/page.tsx` — listado real con grid responsive + empty state + manejo de errores
-- [x] Crear `src/app/blog/[slug]/page.tsx` — vista individual con `prose`, metadata dinámica (OG/Twitter), back link
+#### Blog (lectura)
+- [x] Crear `src/lib/posts.ts` (admin SDK): `getPosts`, `getPost`, `getPostsByCategory`, `getRecentPosts`, `getPublishedSlugs`
+- [x] Crear `src/components/blog/PostCard.tsx`
+- [x] Actualizar `/blog` — listado real con grid responsive + empty state + manejo de errores
+- [x] Crear `/blog/[slug]` — `prose`, metadata OG/Twitter, back link, JSON-LD BlogPosting, reading time, generateStaticParams
 - [x] Configurar `next/image` (remote patterns de Firebase Storage) en `next.config.ts`
-- [x] `@tailwindcss/typography` ya instalado y variables `prose` alineadas a la marca en `globals.css`
-- [x] Fix lint: `ThemeToggle` — eliminar `setState-in-effect` (iconos vía clase `.dark`)
-- [x] Verificar `npm run lint` ✓ y `npm run build` ✓ y `/blog` 200 en dev ✓
+- [x] `@tailwindcss/typography` + variables `prose` en `globals.css`
+- [x] Fix lint: `ThemeToggle` — eliminar `setState-in-effect`
 
-### Fase 3 — Admin (gestión de posts)
-
-- [x] Crear `src/components/blog/PostList.tsx` — listado de posts (borradores + publicados) con status badge, categoría, fecha, ver y eliminar
-- [x] Actualizar `src/app/admin/page.tsx` — editor toggleable ("Nuevo post") + lista con refresh automático tras crear/eliminar
+#### Admin (gestión de posts)
+- [x] Crear `src/components/blog/PostList.tsx` — listado (borradores + publicados) con status badge, ver y eliminar
+- [x] Actualizar `/admin` — editor toggleable + lista con refresh automático
 - [x] Fix `PostEditor`: remover extensión `Link` duplicada (StarterKit v3 ya la incluye), `immediatelyRender: true`, `onSaved` callback
-- [x] Fix `PostEditor`: error handling que muestra el código real de Firebase (ej. `permission-denied`)
-- [x] Crear `firestore.rules` + `storage.rules` + `firebase.json` (escritura/lectura solo admin para mantener borradores privados; el blog lee vía Admin SDK que ignora las reglas)
-- [x] Edición de post existente: `PostEditor` acepta `post`, precarga campos + contenido, usa `updateDoc` (sin regenerar slug) y remonta por `key={post.id}`; botón editar en `PostList`
-- [x] Subida de cover image: UI upload/preview/remover en el editor, payload con coverImage + deleteField al eliminar, storage `covers/**` reglas
-- [x] Verificar `npm run lint` ✓ y `npm run build` ✓
+- [x] Fix `PostEditor`: error handling con código real de Firebase
+- [x] Crear `firestore.rules` + `storage.rules` + `firebase.json`
+- [x] Edición de post existente (precarga + `updateDoc` + remonta por `key={post.id}`)
+- [x] Subida de cover image (upload/preview/remover, deleteField, storage `covers/**`)
+
+#### Portafolio (Fase B — completa)
+- [x] Decidir JSON estático vs Firestore → ADR 0006 (JSON estático)
+- [x] Crear `src/data/projects.json` (5 proyectos)
+- [x] Crear `src/components/portfolio/ProjectCard.tsx`
+- [x] Actualizar `/projects` — grid ordenado por año + empty state + metadata
+
+#### Landing completa (Fase C — completa)
+- [x] Sección "Proyectos destacados" (featured, limit 3) en `/`
+- [x] Sección "Últimos posts" (`getRecentPosts(3)`) en `/`
+- [x] Sección "Sobre mí" (bio + stats + enlaces sociales) en `/`
+- [x] Sección "Currently Playing With" (`src/data/playing-with.ts` + `CurrentlyPlaying.tsx`)
+- [x] Sección "Experiencia" timeline (`src/data/experience.ts` + `ExperienceTimeline.tsx`)
+- [x] `PostCard` mejorado con metadata opcional (category, level, readTime, tech, series, repo, demo)
+
+#### SEO (parcial)
+- [x] `src/app/sitemap.ts` (rutas estáticas + dinámicas por slug)
+- [x] Metadata OG/Twitter para `/blog/[slug]`
+- [x] JSON-LD `BlogPosting` en `/blog/[slug]`
+
+#### Infra
+- [x] Repo en GitHub vía SSH (`origin` → `git@github.com:jdinamarca/jdinamarca.dev.git`)
+- [x] `.env.local` correctamente ignorado por git
+- [x] Dark/light toggle funcional (`ThemeToggle` + `next-themes`)
 
 ---
 
-## 🟡 Pendientes — Próximas tareas técnicas
+### Sesión 3 — 2026-06-27
 
-### Blog — conectar con Firestore
-
-- [x] Crear `src/lib/posts.ts` con funciones:
-  - `getPosts()` — traer posts publicados ordenados por fecha
-  - `getPost(slug)` — traer un post por slug
-  - `getPostsByCategory(category)` — filtrar por blog/lab/ai
-- [x] Actualizar `src/app/blog/page.tsx` — renderizar posts reales con `getPosts()`
-- [x] Crear `src/components/blog/PostCard.tsx` — tarjeta con thumbnail, título, excerpt, tags, fecha
-- [x] Crear `src/app/blog/[slug]/page.tsx` — vista del post individual
-- [x] Instalar `@tailwindcss/typography` para estilos `prose` en el contenido del post
-- [x] Configurar `prose` en `src/app/blog/[slug]/page.tsx`
-- [ ] Reutilizar el listado para `/lab` (filtrar por categoría "lab")
-
-### Admin — gestión de posts
-
-- [x] Agregar listado de posts en `/admin` (borradores + publicados)
-- [x] Agregar botones editar/eliminar por post
-- [x] Edición de post existente (cargar contenido en editor Tiptap)
-- [ ] Subida de cover image para el post
-
-### Portafolio
-
-- [ ] Decidir: ¿datos de proyectos en Firestore o JSON estático en el repo?
-- [ ] Crear estructura de datos de proyectos
-- [ ] Actualizar `src/app/projects/page.tsx` con datos reales
-- [ ] Crear `src/components/portfolio/ProjectCard.tsx`
-
-### Landing page
-
-- [ ] Agregar sección de proyectos destacados en `/`
-- [ ] Agregar sección de últimos posts en `/`
-- [ ] Agregar sección "sobre mí" breve
+#### Lab (Fase A)
+- [x] Decidir modelo de Lab (categoría `lab` vs `experimento`) → ADR 0007 (reutilizar `experimento`).
+- [x] Crear `docs/adr/0007-lab-categoria-experimento.md`.
+- [x] Actualizar `docs/adr/README.md` con ADR 0007.
+- [x] Actualizar `src/app/lab/page.tsx`: importar `getPostsByCategory`, filtrar por `experimento`, metadata "Lab", heading "Lab", mensaje error específico.
+- [x] Verificar `npm run lint` ✓ y `npm run build` ✓ (`/lab` marcado como dynamic).
+- [x] Actualizar `docs/EXECUTION_PLAN.md` (A1 ✅, snapshot, orden recomendado).
 
 ---
 
-## ⚪ Backlog (no urgente)
+### Sesión 4 — 2026-06-27
 
-- [ ] Configurar Firestore security rules (leer posts públicos, escribir solo admin)
-- [ ] Configurar Storage security rules
-- [ ] SEO: metadata dinámica para /blog/[slug]
-- [ ] sitemap.xml dinámico
-- [ ] robots.txt
-- [ ] Crear repo GitHub y hacer primer push
-- [ ] Conectar repo a Vercel
-- [ ] Configurar dominio jdinamarca.dev en Vercel
-- [ ] Modo oscuro/claro toggle
-- [ ] Sistema de tags con filtros en /blog
-- [ ] Analytics (Vercel Analytics)
+#### SEO y Metadatos (Fase D)
+- [x] Crear `src/app/robots.ts` para indexación SEO (allow `/`, disallow `/admin`)
+- [x] Crear `src/app/opengraph-image.tsx` (Edge Runtime, ImageResponse 1200×630)
+
+---
+
+### Sesión 5 — Mejoras de diseño, credibilidad y SEO — 2026-06-27
+
+> Surgidas de una revisión de diseño de la landing. Orden por impacto/esfuerzo.
+
+#### 1. Credibilidad + SEO base ✅
+- [x] Setear `metadataBase` en el root layout (arregla OG/Twitter que resolvían a `http://localhost:3000`)
+- [x] Stats de la landing reales: proyectos desde `projects.json` (`projects.length`) y posts vía `getPublishedPostCount()` (agregación `count()`). Años (15+) y curiosidad (∞) se mantienen.
+
+#### 2. Diferenciar `/lab`
+- [ ] Que `/lab` se sienta distinto del blog (no una copia): hero/intro propios de "AI Lab", no solo listado de posts `experimento`
+
+#### 3. Ritmo visual de la landing
+- [ ] Romper la monotonía vertical: alternar fondo/ancho en 1-2 secciones (ej. "Sobre mí" o "Experiencia" full-bleed con `bg-card`)
+- [ ] Semántica: un `<section>` por bloque con su `<h2>` (a11y + jerarquía de encabezados)
+- [ ] Single source of truth para el stack (hoy duplicado en `page.tsx`, `playing-with.ts` y `CLAUDE.md`)
+
+---
+
+## ❌ Pendientes — verificado que NO existen en código
+
+### Deploy (manual)
+- [ ] Deploy a Vercel (importar repo, env vars, build verde)
+- [ ] Conectar dominio `jdinamarca.dev` en Vercel
+- [ ] Añadir `jdinamarca.dev` + `*.vercel.app` a dominios autorizados en Firebase Auth
+
+---
+
+## 🔵 Backlog (no urgente)
+
+- [ ] Filtros por tags en `/blog` (`TagFilter` client component)
+- [ ] Búsqueda simple en el blog (client-side sobre posts cargados)
+- [ ] RSS feed (`/feed.xml/route.ts`)
+- [ ] Vercel Analytics (`@vercel/analytics`)
+- [ ] Loading skeletons (`loading.tsx`) + error boundary (`error.tsx`) en `/blog`
+- [ ] Limpieza de imágenes huérfanas en Storage al eliminar/reemplazar post
+- [ ] Newsletter / comentarios (opcional)
 
 ---
 
 ## 📝 Notas de contexto
 
 **¿Por qué lazy init en Firebase?**
-Firebase client SDK no puede inicializarse en el servidor (Next.js hace SSR de todos los componentes, incluso los `"use client"`). Si se inicializa a nivel de módulo, el build falla con `auth/invalid-api-key`. La solución fue exportar funciones getter que solo se llaman desde efectos/handlers (browser únicamente).
+Firebase client SDK no puede inicializarse en el servidor (Next.js hace SSR de
+todos los componentes, incluso los `"use client"`). Si se inicializa a nivel de
+módulo, el build falla con `auth/invalid-api-key`. Solución: getters que solo se
+llaman desde efectos/handlers (browser únicamente).
 
 **¿Por qué no `asChild` en Button?**
-Esta versión de shadcn usa `@base-ui/react` en vez de Radix UI. La prop `asChild` no existe. Patrón correcto: `<Link href="/ruta"><Button>Texto</Button></Link>`.
+Esta versión de shadcn usa `@base-ui/react` en vez de Radix UI. La prop
+`asChild` no existe. Patrón correcto: `<Link href="/ruta"><Button>Texto</Button></Link>`.
+
+**¿Por qué el blog lee vía Admin SDK?**
+Las reglas de Firestore son admin-only (escritura/lectura solo admin para
+mantener borradores privados). El Admin SDK ignora las reglas, así que el blog
+lee en SSR sin exponer borradores. Ver ADR 0004.
 
 **shadcn Button size "sm"** tiene clase `h-7`, no `h-8` (default).
